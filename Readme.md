@@ -1,6 +1,6 @@
 # Why Lift? 💪🤔💭
 
-This project seeks to solve another specific problem of mine: tracking my fitness routine. I just want to see my progress, log the repetitions made for every exercise type in a spreadsheet and see the plot.
+This project seeks to solve another specific problem of mine: tracking my fitness routine. I just want to see my progress, log the repetitions made for every workout type in a spreadsheet and see the plot.
 
 > [!note] Some background
 > 
@@ -17,4 +17,7 @@ The idea of using a SQL database comes from an attempt to future-proof this app,
 
 The goal is to have something like this:
 
-![Main GUI](./why_lift_explained.png)
+![Main GUI](./assets/why_lift_explained.png)
+
+## Usage
+
