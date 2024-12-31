@@ -1,9 +1,12 @@
 from PyQt5 import QtCore
+from datetime import datetime
 
 import pandas as pd
 import pyqtgraph as pg
+import pyqtgraph.exporters
 
 class QtPlot(pg.PlotWidget):
+
     def __init__(self):
         super().__init__()
 
@@ -14,6 +17,7 @@ class QtPlot(pg.PlotWidget):
         self.setLabel("left", "Progress (%)", size="18pt")
         self.setLabel("bottom", "Days", size="18pt")
     
+
     def plot_data(self, processed_data: pd.DataFrame) -> None:
         """ --------------------------------------------
         Plot the results! 😁
@@ -41,3 +45,13 @@ class QtPlot(pg.PlotWidget):
         self.plot(x_data, y_data,
                   pen=pg.mkPen(color="b", width=2),
                   symbol="o", symbolBrush="k")
+        
+
+    def save_plot(self, res=300) -> None:
+        """
+        This method saves the data plot!
+        """
+        today = datetime.today().strftime("%y%m%d %H%M%S")
+        exporter = pg.exporters.SVGExporter(self.plotItem)
+
+        exporter.export(f'./Plot ({today}).svg')

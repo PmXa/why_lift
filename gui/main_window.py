@@ -71,6 +71,8 @@ class MainWindow(QMainWindow):
         self.today_button.pressed.connect(self.set_today)
         self.load_file_button.pressed.connect(self.load_file)
 
+        self.save_fig_button.pressed.connect(self.plot_area.save_plot)
+
     # Widget placement
         main_layout = QHBoxLayout()
         main_layout.addLayout(input_zone)

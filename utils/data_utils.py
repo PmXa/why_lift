@@ -21,5 +21,4 @@ def process_data(raw_data: pd.DataFrame) -> pd.DataFrame:
     processed_data["total_reps"] = raw_data.iloc[:, 1:].sum(axis=1)
     processed_data["progress"] = 100 * processed_data.loc[:, "total_reps"] / processed_data.loc[0, "total_reps"]
 
-    processed_data.to_csv('./dump_test.csv')
     return processed_data
