@@ -9,7 +9,7 @@ ToDo:
 - Output Zone:
   - [/] About button
   - [/] Graph View
-  - [ ] Save plot button
+  - [X] Save plot button
 
 PmXa, 12-2024
 ------------------------------------------------ """
@@ -19,11 +19,21 @@ PmXa, 12-2024
 # --------------------
 
 from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QVBoxLayout, QPushButton, QWidget
+from PyQt5.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget
+)
 
 from datetime import date
 from gui.calendar import DateSelector
 
+import pandas as pd
 import utils.data_utils as du
 import utils.plot_utils as pu
 
@@ -35,7 +45,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        raw_data = du.read_data('./test_data.csv')
+        # For debugging purposes: use extended_data.csv
+        raw_data = du.read_data('./extended_data.csv')
+        # raw_data = du.read_data('./test_data.csv')
         data = du.process_data(raw_data)
 
     # Window setup
@@ -50,6 +62,12 @@ class MainWindow(QMainWindow):
         self.calendar_button = QPushButton('🗓️')
         self.today_button = QPushButton('Today')
     
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_container = QWidget()
+        self.input_layout = QVBoxLayout(self.scroll_container)
+        self.generate_entries(data)
+
         file_layout = QHBoxLayout()
         self.load_file_button = QPushButton('Load File')
 
@@ -83,6 +101,9 @@ class MainWindow(QMainWindow):
         date_layout.addWidget(self.calendar_button)
         date_layout.addWidget(self.today_button)
 
+        input_zone.addWidget(self.scroll_area)
+        self.scroll_area.setWidget(self.scroll_container)
+
         input_zone.addLayout(file_layout)
         file_layout.addWidget(self.load_file_button)
 
@@ -111,6 +132,26 @@ class MainWindow(QMainWindow):
         calendar = DateSelector()
         calendar.exec()
         self.today_button.setText(calendar.date)
+
+    def generate_entries(self, data: pd.DataFrame) -> None:
+        entries = data.columns.values[1:-3]
+
+        for entry in entries:
+            entry_row_layout = QHBoxLayout()
+
+            exercise_title = QLabel(f"{entry}".title())
+            entry_row_layout.addWidget(exercise_title)
+
+            rep_input = QLineEdit()
+            entry_row_layout.addWidget(rep_input)
+
+            target_rep_label = QLabel("(Extra)")
+            entry_row_layout.addWidget(target_rep_label)
+
+            self.input_layout.addLayout(entry_row_layout)
+
+        # Añadir un espacio al final para estética
+        self.input_layout.addStretch()
 
     def load_file():
         ...
