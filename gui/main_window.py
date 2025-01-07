@@ -18,7 +18,7 @@ PmXa, 12-2024
 # Imports
 # --------------------
 
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget
 )
@@ -140,12 +141,19 @@ class MainWindow(QMainWindow):
             entry_row_layout = QHBoxLayout()
 
             exercise_title = QLabel(f"{entry}".title())
+            exercise_title.setWordWrap(True)
+            exercise_title.setFixedWidth(80)
             entry_row_layout.addWidget(exercise_title)
 
             rep_input = QLineEdit()
+            last_rep = data[entry].iloc[-1]
+            rep_input.setPlaceholderText(str(last_rep))
+            rep_input.setFixedWidth(40)
+            rep_input.setAlignment(Qt.AlignmentFlag.AlignRight)
             entry_row_layout.addWidget(rep_input)
 
-            target_rep_label = QLabel("(Extra)")
+            target_rep = data[entry][0]
+            target_rep_label = QLabel(f"/{target_rep}")
             entry_row_layout.addWidget(target_rep_label)
 
             self.input_layout.addLayout(entry_row_layout)
