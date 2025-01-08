@@ -4,12 +4,19 @@ to other dialogs :3
 
 ToDo:
 - Input Zone:
-  - [ ] Add the scrolling widget
-  - [ ] Add each workout in a grid
+  - [x] Add the scrolling widget
+  - [x] Add each workout in a grid
+    - [ ] Color the total labels
+  - [/] Make LineEdits modify the DataFrame
 - Output Zone:
-  - [/] About button
+  - [ ] About button
   - [/] Graph View
   - [X] Save plot button
+
+-> The load_date method should load the last session
+    and modify the today_button's text to the
+    currently selected_date. Then, the manual label
+    from line 69 can be deleted.
 
 PmXa, 12-2024
 ------------------------------------------------ """
@@ -26,7 +33,6 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QVBoxLayout,
     QWidget
 )
@@ -46,10 +52,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # For debugging purposes: use extended_data.csv
-        raw_data = du.read_data('./extended_data.csv')
-        # raw_data = du.read_data('./test_data.csv')
-        data = du.process_data(raw_data)
+        raw_data = du.read_data('./test_data.csv')
+        self.data = du.process_data(raw_data)
+        self.selected_date = self.data['Date'].iloc[-1].date()
 
     # Window setup
         self.setWindowTitle("My awesome app!")
@@ -61,13 +66,13 @@ class MainWindow(QMainWindow):
 
         date_layout = QHBoxLayout()
         self.calendar_button = QPushButton('🗓️')
-        self.today_button = QPushButton('Today')
+        self.today_button = QPushButton(str(self.selected_date))
     
         self.scroll_area = QScrollArea(self)
-        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFixedWidth(200)
         self.scroll_container = QWidget()
         self.input_layout = QVBoxLayout(self.scroll_container)
-        self.generate_entries(data)
+        self.generate_entries(self.data)
 
         file_layout = QHBoxLayout()
         self.load_file_button = QPushButton('Load File')
@@ -79,7 +84,7 @@ class MainWindow(QMainWindow):
         self.about_button = QPushButton('About')
 
         self.plot_area = pu.QtPlot()
-        self.plot_area.plot_data(data)
+        self.plot_area.plot_data(self.data)
 
         save_layout = QHBoxLayout()
         self.show_data_button = QPushButton('Show Data')
@@ -123,18 +128,70 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(container)
 
+    # --> Post-UI Code Execution
+
+    """ 🚧 🚧 🚧
+    This is a good place to include the load_date method call, since it requires UI modification, and can use the self.input_LineEdits dictionary to do so!
+    """
+
     # --> Methods
 
-    def set_today(self):
+    def set_today(self) -> None:
+        """
+        This function:
+        0. Updates the selected_date property
+        1. Creates a new row with today's date
+        2. Update the button label
+
+        ToDo:
+        - [ ] Check if today has been registered to avoid duplicating sessions or something
+        """
         today = date.today().strftime("%Y-%m-%d")
+        self.selected_date = self.data['Date'].iloc[-1].date()
+
+        self.data = self.create_session(self.data, today)
         self.today_button.setText(today)
+        self.plot_area.plot_data(self.data)
+
 
     def select_date(self):
+        """
+        This function:
+        - [ ] Selects a date from a calendar widget
+        - [ ] Sets it as the self.selected_date
+        - [ ] Distinguishes aming dates with and without a session register
+        - [?] Allows to modify previous sessions
+        """
         calendar = DateSelector()
         calendar.exec()
         self.today_button.setText(calendar.date)
+        # ToDo: Set self.selected_date
+
+
+    def load_session(self, data: pd.DataFrame, date) -> None:
+        """
+        This function displays a previous session selected from the calendar window and allows for its modification.
+        """
+
+
+    def create_session(self, data: pd.DataFrame, date) -> pd.DataFrame:
+        """
+        This function creates a new row in the DataFrame prepopulated with zeros.
+        """
+        
+        new_row = {column: (date if column == 'Date' else [0]) for column in data.columns.values}
+        new_row = pd.DataFrame(new_row)
+        new_row["Date"] = pd.to_datetime(new_row["Date"])
+
+        new_data = pd.concat([data, new_row], ignore_index=True)
+        return du.process_data(new_data)
+
 
     def generate_entries(self, data: pd.DataFrame) -> None:
+        """
+        This function reads the different exercises listed in the csv file and generates a field for every one of them. 
+        """
+        self.input_LineEdits = {}
         entries = data.columns.values[1:-3]
 
         for entry in entries:
@@ -142,13 +199,13 @@ class MainWindow(QMainWindow):
 
             exercise_title = QLabel(f"{entry}".title())
             exercise_title.setWordWrap(True)
-            exercise_title.setFixedWidth(80)
+            exercise_title.setFixedWidth(96)
             entry_row_layout.addWidget(exercise_title)
 
             rep_input = QLineEdit()
             last_rep = data[entry].iloc[-1]
             rep_input.setPlaceholderText(str(last_rep))
-            rep_input.setFixedWidth(40)
+            rep_input.setFixedWidth(36)
             rep_input.setAlignment(Qt.AlignmentFlag.AlignRight)
             entry_row_layout.addWidget(rep_input)
 
@@ -156,10 +213,21 @@ class MainWindow(QMainWindow):
             target_rep_label = QLabel(f"/{target_rep}")
             entry_row_layout.addWidget(target_rep_label)
 
+            rep_input.textChanged.connect(lambda text, id=entry: self.input_rep_changed(text, id))
+
+            self.input_LineEdits[entry] = rep_input
             self.input_layout.addLayout(entry_row_layout)
 
         # Añadir un espacio al final para estética
         self.input_layout.addStretch()
+
+
+    def input_rep_changed(self, reps: str, id: str) -> None:
+        index = (self.data['Date'] - self.selected_date).dt.days == 0
+        index.to_csv("./irp.txt")
+
+        self.data.loc[index, 'Lifts'] = int(reps)
+
 
     def load_file():
         ...

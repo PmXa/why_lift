@@ -47,7 +47,7 @@ class QtPlot(pg.PlotWidget):
                   symbol="o", symbolBrush="k")
         
 
-    def save_plot(self, res=300) -> None:
+    def save_plot(self) -> None:
         """
         This method saves the data plot!
         """

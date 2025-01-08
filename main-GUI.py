@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QApplication
 from gui.main_window import MainWindow
 from os import path
 
+import pandas as pd
+
 # -----------
 # Entry Point
 # -----------
@@ -25,3 +27,6 @@ if __name__ == '__main__':
         raise FileNotFoundError
 
     app.exec()
+
+    # Save changes to data
+    main_window.data.to_csv('./dump.csv')
