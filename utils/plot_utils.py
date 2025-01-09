@@ -22,10 +22,10 @@ class QtPlot(pg.PlotWidget):
         """ --------------------------------------------
         Plot the results! 😁
         -------------------------------------------- """
-        # Data
+        # Data, empty to use the update_plot() method and avoid duplicates
 
-        x_data = processed_data.loc[1:, "days"].reset_index(drop=True)
-        y_data = processed_data.loc[1:, "progress"].reset_index(drop=True)
+        x_data = ()
+        y_data = ()
 
         # Plot
 
@@ -46,6 +46,27 @@ class QtPlot(pg.PlotWidget):
                   pen=pg.mkPen(color="b", width=2),
                   symbol="o", symbolBrush="k")
         
+        # Add a reference to the line object to update it later with QLineEdits
+        self.plot_line = self.plot(
+            x_data,
+            y_data,
+            pen = pg.mkPen(color="b", width=2),
+            symbol = "o",
+            symbolBrush="k"
+        )
+
+        self.update_plot(processed_data)
+
+
+    def update_plot(self, data: pd.DataFrame) -> None:
+        """ ------------------------------------------
+        Update the line with new data from QLineEdits.
+        -------------------------------------------"""
+        x_data = data.loc[1:, "days"].reset_index(drop=True)
+        y_data = data.loc[1:, "progress"].reset_index(drop=True)
+
+        self.plot_line.setData(x_data, y_data)
+
 
     def save_plot(self) -> None:
         """

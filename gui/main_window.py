@@ -52,8 +52,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        raw_data = du.read_data('./test_data.csv')
-        self.data = du.process_data(raw_data)
+        raw_data, self.workout_names = du.read_data('./test_data.csv')
+        self.data = du.process_data(raw_data, self.workout_names)
         self.selected_date = self.data['Date'].iloc[-1].date()
 
     # Window setup
@@ -141,15 +141,17 @@ class MainWindow(QMainWindow):
         This function:
         0. Updates the selected_date property
         1. Creates a new row with today's date
-        2. Update the button label
-
-        ToDo:
-        - [ ] Check if today has been registered to avoid duplicating sessions or something
+        2. Updates the button label
         """
         today = date.today().strftime("%Y-%m-%d")
-        self.selected_date = self.data['Date'].iloc[-1].date()
+        self.selected_date = pd.to_datetime(today)
 
-        self.data = self.create_session(self.data, today)
+        # Check if the current date exists to avoid duplicates!
+        if any(self.data['Date'] == self.selected_date):
+            self.load_session(self.data, today)
+        else:
+            self.data = self.create_session(self.data, self.selected_date)
+
         self.today_button.setText(today)
         self.plot_area.plot_data(self.data)
 
@@ -184,7 +186,7 @@ class MainWindow(QMainWindow):
         new_row["Date"] = pd.to_datetime(new_row["Date"])
 
         new_data = pd.concat([data, new_row], ignore_index=True)
-        return du.process_data(new_data)
+        return du.process_data(new_data, self.workout_names)
 
 
     def generate_entries(self, data: pd.DataFrame) -> None:
@@ -192,9 +194,8 @@ class MainWindow(QMainWindow):
         This function reads the different exercises listed in the csv file and generates a field for every one of them. 
         """
         self.input_LineEdits = {}
-        entries = data.columns.values[1:-3]
 
-        for entry in entries:
+        for entry in self.workout_names:
             entry_row_layout = QHBoxLayout()
 
             exercise_title = QLabel(f"{entry}".title())
@@ -223,10 +224,11 @@ class MainWindow(QMainWindow):
 
 
     def input_rep_changed(self, reps: str, id: str) -> None:
-        index = (self.data['Date'] - self.selected_date).dt.days == 0
-        index.to_csv("./irp.txt")
+        index = (self.data['Date'] == pd.to_datetime(self.selected_date))
+        self.data.loc[index, id] = int(reps)
 
-        self.data.loc[index, 'Lifts'] = int(reps)
+        self.data = du.process_data(self.data, self.workout_names)
+        self.plot_area.update_plot(self.data)
 
 
     def load_file():
